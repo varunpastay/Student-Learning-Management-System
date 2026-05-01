@@ -1,1 +1,1 @@
-web: python manage.py migrate --no-input && gunicorn slms_project.wsgi --bind 0.0.0.0:$PORT --worker-class gevent --workers 2 --worker-connections 1000 --timeout 300
+web: python manage.py migrate --no-input && gunicorn slms_project.wsgi --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 300 --keep-alive 5
