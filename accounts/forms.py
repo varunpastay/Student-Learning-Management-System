@@ -2,6 +2,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User, StudentProfile, TeacherProfile
+import uuid
 
 
 class BootstrapMixin:
@@ -23,10 +24,27 @@ class StudentRegistrationForm(BootstrapMixin, UserCreationForm):
         model  = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if User.objects.filter(username=username).exists():
+            import random
+            username = f"{username}{random.randint(1000,9999)}"
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'An account with this email already exists. Please login instead.'
+            )
+        return email
+
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.role  = User.Role.STUDENT
-        user.email = self.cleaned_data['email']
+        user.role       = User.Role.STUDENT
+        user.email      = self.cleaned_data['email'].lower()
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name  = self.cleaned_data['last_name']
         if commit:
             user.save()
             StudentProfile.objects.filter(user=user).update(
@@ -47,10 +65,27 @@ class TeacherRegistrationForm(BootstrapMixin, UserCreationForm):
         model  = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if User.objects.filter(username=username).exists():
+            import random
+            username = f"{username}{random.randint(1000,9999)}"
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'An account with this email already exists. Please login instead.'
+            )
+        return email
+
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.role  = User.Role.TEACHER
-        user.email = self.cleaned_data['email']
+        user.role       = User.Role.TEACHER
+        user.email      = self.cleaned_data['email'].lower()
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name  = self.cleaned_data['last_name']
         if commit:
             user.save()
             TeacherProfile.objects.filter(user=user).update(
@@ -62,7 +97,6 @@ class TeacherRegistrationForm(BootstrapMixin, UserCreationForm):
 
 
 class LoginForm(AuthenticationForm):
-    """Login using email instead of username."""
     username = forms.EmailField(
         label='Email Address',
         widget=forms.EmailInput(attrs={
@@ -80,17 +114,15 @@ class LoginForm(AuthenticationForm):
     )
 
     def clean(self):
-        email = self.cleaned_data.get('username')  # field is named username by Django
+        email = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
         if email and password:
-            # Look up user by email first
-            from accounts.models import User as UserModel
             try:
-                user_obj = UserModel.objects.get(email__iexact=email)
+                user_obj = User.objects.get(email__iexact=email)
                 self.cleaned_data['username'] = user_obj.username
-            except UserModel.DoesNotExist:
+            except User.DoesNotExist:
                 raise forms.ValidationError('No account found with this email address.')
-            except UserModel.MultipleObjectsReturned:
+            except User.MultipleObjectsReturned:
                 raise forms.ValidationError('Multiple accounts found. Please contact support.')
         return super().clean()
 
@@ -100,6 +132,13 @@ class UserProfileForm(BootstrapMixin, forms.ModelForm):
         model  = User
         fields = ['first_name', 'last_name', 'email', 'avatar', 'bio', 'phone']
         widgets = {'bio': forms.Textarea(attrs={'rows': 3})}
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        qs = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError('This email is already used by another account.')
+        return email
 
 
 class StudentProfileForm(BootstrapMixin, forms.ModelForm):
