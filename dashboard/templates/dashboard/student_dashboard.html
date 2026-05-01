@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard — SLMS{% endblock %}
+{% block nav_sdash %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="page-title mb-0">Welcome back, {{ user.first_name }}! 👋</h4>
+    <p class="text-muted mb-0" style="font-size:13px">Here's your learning overview.</p>
+  </div>
+  <a href="{% url 'courses:list' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i> Find Courses</a>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card" style="border-left:4px solid #4f46e5">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="stat-val text-primary">{{ enrolled_count }}</div><div class="stat-lbl">Enrolled Courses</div></div>
+        <i class="bi bi-book-fill text-primary" style="font-size:1.8rem;opacity:.2"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card" style="border-left:4px solid #d97706">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="stat-val text-warning">{{ pending_count }}</div><div class="stat-lbl">Pending Assignments</div></div>
+        <i class="bi bi-clock-fill text-warning" style="font-size:1.8rem;opacity:.2"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card" style="border-left:4px solid #dc2626">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="stat-val text-danger">{{ overdue_count }}</div><div class="stat-lbl">Overdue</div></div>
+        <i class="bi bi-exclamation-circle-fill text-danger" style="font-size:1.8rem;opacity:.2"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card" style="border-left:4px solid #059669">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="stat-val text-success">{{ submitted_count }}</div><div class="stat-lbl">Submitted</div></div>
+        <i class="bi bi-check-circle-fill text-success" style="font-size:1.8rem;opacity:.2"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Enrolled Courses -->
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-collection me-2 text-primary"></i>My Courses</span>
+        <a href="{% url 'courses:list' %}" class="btn btn-sm btn-outline-primary" style="font-size:11px">Browse More</a>
+      </div>
+      <div class="card-body p-0">
+        {% for enrollment in enrollments %}
+        <div class="d-flex align-items-center px-4 py-3 border-bottom">
+          <div class="avatar-sm me-3" style="background:{% cycle '#ede9fe' '#e0f2fe' '#dcfce7' '#fef3c7' '#fce7f3' %};color:{% cycle '#7c3aed' '#0369a1' '#166534' '#92400e' '#9d174d' %}">
+            {{ enrollment.course.title|first|upper }}
+          </div>
+          <div class="flex-grow-1 min-w-0">
+            <a href="{% url 'courses:detail' enrollment.course.slug %}" class="text-decoration-none fw-semibold text-dark" style="font-size:13px">{{ enrollment.course.title }}</a>
+            <div class="text-muted" style="font-size:12px">{{ enrollment.course.teacher.get_full_name }}</div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+              <div class="progress flex-grow-1" style="height:5px"><div class="progress-bar bg-primary" style="width:{{ enrollment.progress }}%"></div></div>
+              <span style="font-size:11px;color:#64748b;width:30px">{{ enrollment.progress }}%</span>
+            </div>
+          </div>
+          <a href="{% url 'courses:detail' enrollment.course.slug %}" class="btn btn-sm btn-outline-secondary ms-3" style="font-size:11px">Open</a>
+        </div>
+        {% empty %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-book" style="font-size:2.5rem;display:block;margin-bottom:8px"></i>
+          No courses yet. <a href="{% url 'courses:list' %}">Explore courses</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div class="col-md-5">
+    <!-- Upcoming Deadlines -->
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-calendar-event me-2 text-warning"></i>Upcoming Deadlines</div>
+      <div class="card-body p-0">
+        {% for a in pending_assignments %}
+        <div class="d-flex align-items-center px-4 py-2 border-bottom">
+          <div class="flex-grow-1">
+            <a href="{% url 'assignments:detail' a.pk %}" class="text-decoration-none fw-semibold text-dark" style="font-size:13px">{{ a.title|truncatechars:30 }}</a>
+            <div class="text-muted" style="font-size:11px">{{ a.course.title|truncatechars:25 }}</div>
+          </div>
+          {% if a.days_remaining == 0 %}
+          <span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px">Today!</span>
+          {% elif a.days_remaining <= 2 %}
+          <span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px">{{ a.days_remaining }}d left</span>
+          {% elif a.days_remaining <= 5 %}
+          <span class="badge" style="background:#fef3c7;color:#92400e;font-size:10px">{{ a.days_remaining }}d left</span>
+          {% else %}
+          <span class="badge" style="background:#dcfce7;color:#166534;font-size:10px">{{ a.days_remaining }}d left</span>
+          {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center py-4 text-muted" style="font-size:13px">
+          <i class="bi bi-check-all text-success" style="font-size:1.5rem;display:block;margin-bottom:4px"></i>All caught up!
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Submissions -->
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-inbox me-2 text-success"></i>Recent Submissions</div>
+      <div class="card-body p-0">
+        {% for sub in recent_submissions %}
+        <div class="d-flex align-items-center px-4 py-2 border-bottom">
+          <div class="flex-grow-1">
+            <div class="fw-semibold" style="font-size:13px">{{ sub.assignment.title|truncatechars:28 }}</div>
+            <div class="text-muted" style="font-size:11px">{{ sub.submitted_at|date:"M d, Y" }}</div>
+          </div>
+          <div class="text-end">
+            <span class="badge badge-{{ sub.status }}">{{ sub.get_status_display }}</span>
+            {% if sub.marks_obtained is not None %}
+            <div style="font-size:11px;color:#64748b;margin-top:2px">{{ sub.marks_obtained }}/{{ sub.assignment.total_marks }}</div>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-4 text-muted" style="font-size:13px">No submissions yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bell me-2 text-primary"></i>Notifications</span>
+        <a href="{% url 'notifications:list' %}" class="text-decoration-none" style="font-size:12px">View all</a>
+      </div>
+      <div class="card-body p-0">
+        {% for notif in notifications %}
+        <div class="d-flex align-items-start px-4 py-2 border-bottom {% if not notif.is_read %}bg-light{% endif %}">
+          <span class="me-2 mt-1">{% if notif.notification_type == 'assignment' %}📝{% elif notif.notification_type == 'course' %}📖{% elif notif.notification_type == 'grade' %}⭐{% else %}🔔{% endif %}</span>
+          <div class="flex-grow-1">
+            <div class="fw-semibold" style="font-size:13px">{{ notif.title|truncatechars:35 }}</div>
+            <div class="text-muted" style="font-size:11px">{{ notif.created_at|timesince }} ago</div>
+          </div>
+          {% if not notif.is_read %}<span class="badge" style="background:#ede9fe;color:#7c3aed;font-size:10px">New</span>{% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center py-4 text-muted" style="font-size:13px">No notifications.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

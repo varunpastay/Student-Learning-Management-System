@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Quizzes — SLMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><h4 class="page-title mb-0"><i class="bi bi-patch-question me-2 text-primary"></i>Quizzes</h4>
+  <p class="text-muted mb-0" style="font-size:13px">Test your knowledge</p></div>
+  {% if user.is_teacher %}<a href="{% url 'quiz:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Create Quiz</a>{% endif %}
+</div>
+{% if quizzes %}
+<div class="row g-3">
+  {% for quiz in quizzes %}
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h6 class="fw-semibold mb-0">{{ quiz.title }}</h6>
+        {% if quiz.is_active %}<span class="badge bg-success-subtle text-success" style="font-size:10px">Active</span>
+        {% else %}<span class="badge bg-secondary-subtle text-secondary" style="font-size:10px">Inactive</span>{% endif %}
+      </div>
+      <p class="text-muted mb-2" style="font-size:12px">{{ quiz.course.title }}</p>
+      <div class="d-flex gap-3 text-muted mb-3" style="font-size:12px">
+        <span><i class="bi bi-question-circle me-1"></i>{{ quiz.questions.count }} questions</span>
+        <span><i class="bi bi-clock me-1"></i>{% if quiz.time_limit %}{{ quiz.time_limit }} min{% else %}No limit{% endif %}</span>
+        <span><i class="bi bi-trophy me-1"></i>Pass: {{ quiz.pass_score }}%</span>
+      </div>
+      <div class="mt-auto d-flex gap-2">
+        <a href="{% url 'quiz:detail' quiz.id %}" class="btn btn-sm btn-outline-primary flex-grow-1">View</a>
+        {% if user.is_student %}
+        <a href="{% url 'quiz:take' quiz.id %}" class="btn btn-sm btn-primary">Take Quiz</a>
+        {% else %}
+        <a href="{% url 'quiz:add_question' quiz.id %}" class="btn btn-sm btn-outline-success"><i class="bi bi-plus"></i> Questions</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-patch-question" style="font-size:3.5rem;display:block;margin-bottom:12px"></i>
+  <h5>No quizzes yet</h5>
+  {% if user.is_teacher %}<a href="{% url 'quiz:create' %}" class="btn btn-primary btn-sm mt-2">Create First Quiz</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

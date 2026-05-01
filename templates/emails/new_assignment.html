@@ -1,0 +1,13 @@
+{% extends 'emails/base_email.html' %}
+{% block content %}
+<h2>📝 New Assignment Posted!</h2>
+<p>Hi {{ user.first_name }}, a new assignment has been posted in <strong>{{ assignment.course.title }}</strong>.</p>
+<div class="info-box">
+  <p><strong>Assignment:</strong> {{ assignment.title }}</p>
+  <p><strong>Course:</strong> {{ assignment.course.title }}</p>
+  <p><strong>Due Date:</strong> {{ assignment.deadline|date:"M d, Y H:i" }}</p>
+  <p><strong>Total Marks:</strong> {{ assignment.total_marks }}</p>
+</div>
+<p>{{ assignment.description|truncatechars:200 }}</p>
+<a href="http://student-learning-management-system.onrender.com/assignments/{{ assignment.pk }}/" class="btn">View Assignment</a>
+{% endblock %}

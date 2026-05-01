@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Assignments — SLMS{% endblock %}
+{% block nav_asgn %}active{% endblock %}
+{% block nav_tasgn %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><h4 class="page-title mb-0">Assignments</h4><p class="text-muted mb-0" style="font-size:13px">{% if user.is_teacher %}Manage your assignments{% else %}Your course assignments{% endif %}</p></div>
+  {% if user.is_teacher %}<a href="{% url 'assignments:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Create Assignment</a>{% endif %}
+</div>
+
+<div class="d-flex gap-2 mb-3">
+  <a href="?status=" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">All ({{ all_count }})</a>
+  <a href="?status=open" class="btn btn-sm {% if status_filter == 'open' %}btn-warning{% else %}btn-outline-secondary{% endif %}">Open ({{ open_count }})</a>
+  <a href="?status=closed" class="btn btn-sm {% if status_filter == 'closed' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Closed ({{ closed_count }})</a>
+  {% if user.is_teacher %}<a href="?status=pending_grade" class="btn btn-sm {% if status_filter == 'pending_grade' %}btn-success{% else %}btn-outline-secondary{% endif %}">Needs Grading ({{ pending_grade_count }})</a>{% endif %}
+</div>
+
+{% if assignments %}
+<div class="row g-3">
+  {% for a in assignments %}
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div class="flex-grow-1 me-2">
+          <h6 class="fw-semibold mb-0" style="font-size:14px">
+            <a href="{% url 'assignments:detail' a.pk %}" class="text-decoration-none text-dark">{{ a.title }}</a>
+          </h6>
+          <div class="text-muted" style="font-size:12px">{{ a.course.title }}</div>
+        </div>
+        {% if a.is_past_deadline %}<span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;flex-shrink:0">Closed</span>
+        {% elif a.days_remaining == 0 %}<span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;flex-shrink:0">Due Today</span>
+        {% elif a.days_remaining <= 2 %}<span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;flex-shrink:0">{{ a.days_remaining }}d left</span>
+        {% elif a.days_remaining <= 5 %}<span class="badge" style="background:#fef3c7;color:#92400e;font-size:10px;flex-shrink:0">{{ a.days_remaining }}d left</span>
+        {% else %}<span class="badge" style="background:#dcfce7;color:#166534;font-size:10px;flex-shrink:0">{{ a.days_remaining }}d left</span>{% endif %}
+      </div>
+      <p class="text-muted mb-2" style="font-size:12px;line-height:1.5">{{ a.description|truncatechars:90 }}</p>
+      <div class="d-flex justify-content-between text-muted mb-3" style="font-size:12px">
+        <span><i class="bi bi-clock me-1"></i>{{ a.deadline|date:"M d, Y H:i" }}</span>
+        <span><i class="bi bi-award me-1"></i>{{ a.total_marks }} marks</span>
+        {% if user.is_teacher %}<span><i class="bi bi-inbox me-1"></i>{{ a.submissions.count }} submissions</span>{% endif %}
+      </div>
+      <div class="d-flex gap-2 mt-auto">
+        <a href="{% url 'assignments:detail' a.pk %}" class="btn btn-sm btn-outline-primary flex-grow-1">View</a>
+        {% if user.is_teacher %}
+        <a href="{% url 'assignments:edit' a.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+        <a href="{% url 'assignments:delete' a.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this assignment?')"><i class="bi bi-trash"></i></a>
+        {% elif user.is_student and not a.is_past_deadline %}
+        <a href="{% url 'assignments:submit' a.pk %}" class="btn btn-sm btn-primary">Submit</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-file-earmark-text text-muted" style="font-size:3rem;display:block;margin-bottom:12px"></i>
+  <h5 class="text-muted">No assignments found</h5>
+  {% if user.is_teacher %}<a href="{% url 'assignments:create' %}" class="btn btn-primary btn-sm mt-2">Create First Assignment</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

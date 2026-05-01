@@ -1,0 +1,15 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "gunicorn slms_project.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+healthcheckPath = "/accounts/login/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[[deploy.releaseCommands]]
+command = "python manage.py migrate --no-input"
+[[deploy.releaseCommands]]
+command = "python manage.py collectstatic --no-input --clear"
+[[deploy.releaseCommands]]
+command = "python manage.py seed_demo"

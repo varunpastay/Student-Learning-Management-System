@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}{{ quiz.title }} — SLMS{% endblock %}
+{% block extra_css %}
+<style>
+.q-card{border:2px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;transition:.2s}
+.choice-label{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;margin-bottom:6px;transition:.15s}
+.choice-label:hover{background:#f0f4ff;border-color:#4f46e5}
+input[type=radio]:checked+.choice-label{background:#ede9fe;border-color:#4f46e5;color:#4f46e5;font-weight:600}
+#timerBar{height:5px;background:#4f46e5;transition:width 1s linear;border-radius:3px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="mb-3 d-flex justify-content-between align-items-center">
+  <div><h4 class="page-title mb-0">{{ quiz.title }}</h4>
+  <p class="text-muted mb-0" style="font-size:13px">{{ quiz.course.title }} · {{ questions.count }} questions</p></div>
+  {% if quiz.time_limit %}
+  <div class="text-center">
+    <div id="timerDisplay" class="fw-bold" style="font-size:1.3rem;color:#4f46e5">{{ quiz.time_limit }}:00</div>
+    <div style="font-size:11px;color:#64748b">Time remaining</div>
+    <div class="mt-1" style="width:120px;background:#e2e8f0;border-radius:3px;height:5px"><div id="timerBar" style="width:100%;height:5px;background:#4f46e5;border-radius:3px"></div></div>
+  </div>
+  {% endif %}
+</div>
+<form method="post" id="quizForm">{% csrf_token %}
+  {% for q in questions %}
+  <div class="q-card">
+    <div class="d-flex align-items-start gap-2 mb-3">
+      <span class="badge bg-primary flex-shrink-0" style="margin-top:2px">Q{{ forloop.counter }}</span>
+      <p class="fw-semibold mb-0" style="font-size:14px">{{ q.text }}</p>
+    </div>
+    {% for choice in q.choices.all %}
+    <div>
+      <input type="radio" name="q_{{ q.id }}" id="c{{ choice.id }}" value="{{ choice.id }}" style="display:none">
+      <label for="c{{ choice.id }}" class="choice-label" style="font-size:13px">
+        <span style="width:24px;height:24px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">{{ forloop.counter|add:64|chr }}</span>
+        {{ choice.text }}
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <button type="submit" class="btn btn-primary btn-lg w-100" onclick="return confirm('Submit quiz? You cannot change answers after submission.')">
+    <i class="bi bi-send me-2"></i>Submit Quiz
+  </button>
+</form>
+{% if quiz.time_limit %}
+<script>
+let seconds = {{ quiz.time_limit }} * 60;
+const total = seconds;
+const disp = document.getElementById('timerDisplay');
+const bar  = document.getElementById('timerBar');
+const timer = setInterval(() => {
+  seconds--;
+  if (seconds <= 0) { clearInterval(timer); document.getElementById('quizForm').submit(); return; }
+  const m = Math.floor(seconds/60), s = seconds%60;
+  disp.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  bar.style.width = (seconds/total*100)+'%';
+  if (seconds < 60) { disp.style.color='#dc2626'; bar.style.background='#dc2626'; }
+}, 1000);
+</script>
+{% endif %}
+{% endblock %}

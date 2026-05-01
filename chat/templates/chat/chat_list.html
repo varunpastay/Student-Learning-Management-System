@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Messages — SLMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><h4 class="page-title mb-0"><i class="bi bi-chat-dots me-2"></i>Messages</h4>
+  <p class="text-muted mb-0" style="font-size:13px">Your conversations</p></div>
+</div>
+<div class="card">
+  {% for item in rooms_data %}
+  {% with room=item.room unread=item.unread %}
+  <a href="{% url 'chat:room' room.id %}" class="text-decoration-none">
+    <div class="d-flex align-items-center px-4 py-3 border-bottom {% if unread %}bg-light{% endif %}" style="transition:.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+      <div class="avatar-sm me-3 flex-shrink-0" style="background:#ede9fe;color:#7c3aed;font-size:11px">
+        {% if user.is_student %}{{ room.teacher.first_name|first }}{{ room.teacher.last_name|first }}
+        {% else %}{{ room.student.first_name|first }}{{ room.student.last_name|first }}{% endif %}
+      </div>
+      <div class="flex-grow-1 min-w-0">
+        <div class="fw-semibold text-dark" style="font-size:14px">
+          {% if user.is_student %}{{ room.teacher.get_full_name }}{% else %}{{ room.student.get_full_name }}{% endif %}
+        </div>
+        <div class="text-muted" style="font-size:12px">{{ room.course.title|truncatechars:35 }}</div>
+        {% if room.last_message %}
+        <div class="text-muted" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ room.last_message.message|truncatechars:50 }}</div>
+        {% endif %}
+      </div>
+      <div class="text-end flex-shrink-0 ms-2">
+        {% if room.last_message %}<div class="text-muted" style="font-size:11px">{{ room.last_message.sent_at|date:"M d" }}</div>{% endif %}
+        {% if unread %}<span class="badge bg-primary rounded-pill mt-1">{{ unread }}</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% endwith %}
+  {% empty %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-chat-dots" style="font-size:3rem;display:block;margin-bottom:12px"></i>
+    <h5>No conversations yet</h5>
+    <p style="font-size:13px">Go to a course and click "Chat with Teacher" to start.</p>
+    <a href="{% url 'courses:list' %}" class="btn btn-primary btn-sm">Browse Courses</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

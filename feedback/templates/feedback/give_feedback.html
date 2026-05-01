@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Feedback — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+
+    <!-- Existing ratings -->
+    {% if avg_rating %}
+    <div class="card mb-4 p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Course Ratings</h5>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div style="font-size:3rem;font-weight:700;color:#f59e0b">{{ avg_rating }}</div>
+        <div>
+          <div style="font-size:1.3rem;color:#f59e0b">
+            {% for i in "12345" %}{% if forloop.counter <= avg_rating|floatformat:"0"|add:"0" %}★{% else %}☆{% endif %}{% endfor %}
+          </div>
+          <div class="text-muted" style="font-size:13px">{{ all_feedback.count }} review{{ all_feedback.count|pluralize }}</div>
+        </div>
+      </div>
+      {% for fb in all_feedback %}
+      <div class="d-flex gap-3 py-2 border-bottom">
+        <div class="avatar-sm flex-shrink-0" style="background:#ede9fe;color:#7c3aed;font-size:11px">{{ fb.student.first_name|first }}{{ fb.student.last_name|first }}</div>
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <strong style="font-size:13px">{{ fb.student.get_full_name }}</strong>
+            <span style="color:#f59e0b">{% for i in "12345" %}{% if forloop.counter <= fb.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          </div>
+          {% if fb.comment %}<p class="text-muted mb-0" style="font-size:13px">{{ fb.comment }}</p>{% endif %}
+          <small class="text-muted">{{ fb.created_at|date:"M d, Y" }}</small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Give feedback form -->
+    <div class="card p-4">
+      <h5 class="fw-bold mb-1"><i class="bi bi-chat-square-heart me-2 text-primary"></i>{% if existing %}Edit Your Feedback{% else %}Rate This Course{% endif %}</h5>
+      <p class="text-muted mb-4" style="font-size:13px">For: <strong>{{ course.title }}</strong> by {{ course.teacher.get_full_name }}</p>
+      <form method="post">
+        {% csrf_token %}
+        <!-- Star rating -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold" style="font-size:13px">Your Rating</label>
+          <div class="d-flex gap-2 star-container" id="starContainer">
+            {% for i in "12345" %}
+            <label class="star-label" style="cursor:pointer;font-size:2rem;color:#d1d5db" data-val="{{ forloop.counter }}">
+              ★
+              <input type="radio" name="rating" value="{{ forloop.counter }}" style="display:none" {% if existing and existing.rating == forloop.counter %}checked{% endif %}>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">Your Review (optional)</label>
+          {{ form.comment }}
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">{% if existing %}Update Feedback{% else %}Submit Feedback{% endif %}</button>
+          <a href="{% url 'courses:detail' course.slug %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+const stars = document.querySelectorAll('.star-label');
+const existing = {{ existing.rating|default:"0" }};
+function highlight(val) {
+  stars.forEach((s,i) => { s.style.color = i < val ? '#f59e0b' : '#d1d5db'; });
+}
+highlight(existing);
+stars.forEach((star, idx) => {
+  star.addEventListener('mouseover', () => highlight(idx+1));
+  star.addEventListener('mouseout', () => {
+    const checked = document.querySelector('input[name="rating"]:checked');
+    highlight(checked ? parseInt(checked.value) : existing);
+  });
+  star.addEventListener('click', () => {
+    star.querySelector('input').checked = true;
+    highlight(idx+1);
+  });
+});
+</script>
+{% endblock %}

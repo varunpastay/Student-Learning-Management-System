@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% block content %}
+<h2>⭐ Your Assignment Has Been Graded!</h2>
+<p>Hi {{ user.first_name }}, your submission for <strong>{{ submission.assignment.title }}</strong> has been graded.</p>
+<div class="info-box">
+  <p><strong>Assignment:</strong> {{ submission.assignment.title }}</p>
+  <p><strong>Marks:</strong> {{ submission.marks_obtained }} / {{ submission.assignment.total_marks }} ({{ submission.percentage }}%)</p>
+  <p><strong>Status:</strong> {{ submission.get_status_display }}</p>
+  {% if submission.feedback %}<p><strong>Feedback:</strong> {{ submission.feedback }}</p>{% endif %}
+</div>
+<a href="http://student-learning-management-system.onrender.com/assignments/{{ submission.assignment.pk }}/" class="btn">View Details</a>
+{% endblock %}

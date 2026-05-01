@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Login — SLMS{% endblock %}
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:20px;">
+  <div class="card shadow-lg" style="width:100%;max-width:420px;border-radius:16px;">
+    <div class="card-body p-5">
+      <div class="text-center mb-4">
+        <i class="bi bi-mortarboard-fill text-primary" style="font-size:3rem;"></i>
+        <h3 class="fw-bold mt-2 mb-0">Welcome back</h3>
+        <p class="text-muted" style="font-size:13px">Sign in to your SLMS account</p>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <!-- Email field -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">Email Address</label>
+          <input type="email" name="username" class="form-control" placeholder="Enter your email address" required autofocus>
+        </div>
+        <!-- Password with eye toggle -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">Password</label>
+          <div class="input-group">
+            <input type="password" name="password" id="passwordField" class="form-control" placeholder="Enter your password" required>
+            <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1">
+              <i class="bi bi-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2" style="font-size:13px">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary w-100 py-2 mt-1">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+        </button>
+      </form>
+      <hr class="my-4">
+
+      <div class="text-center">
+        <p class="text-muted mb-2" style="font-size:13px">Don't have an account?</p>
+        <a href="{% url 'accounts:register_student' %}" class="btn btn-outline-primary btn-sm me-2">Student Sign Up</a>
+        <a href="{% url 'accounts:register_teacher' %}" class="btn btn-outline-secondary btn-sm">Teacher Sign Up</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('togglePassword').addEventListener('click', function() {
+  const pwd = document.getElementById('passwordField');
+  const icon = document.getElementById('eyeIcon');
+  if (pwd.type === 'password') {
+    pwd.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    pwd.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+});
+</script>
+{% endblock %}

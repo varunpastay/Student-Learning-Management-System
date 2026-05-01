@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Result — SLMS{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <!-- Score card -->
+    <div class="card p-4 mb-4 text-center {% if attempt.passed %}border-success{% else %}border-danger{% endif %}" style="border-width:2px">
+      <div style="font-size:4rem">{% if attempt.passed %}🎉{% else %}😔{% endif %}</div>
+      <h3 class="fw-bold mt-2">{% if attempt.passed %}Passed!{% else %}Not Passed{% endif %}</h3>
+      <div style="font-size:3rem;font-weight:700;color:{% if attempt.passed %}#059669{% else %}#dc2626{% endif %}">{{ attempt.percentage }}%</div>
+      <p class="text-muted">{{ attempt.score }} / {{ attempt.total }} correct · Grade: <strong>{{ attempt.grade_letter }}</strong></p>
+      <p class="text-muted" style="font-size:13px">Pass score: {{ quiz.pass_score }}% · Your score: {{ attempt.percentage }}%</p>
+    </div>
+
+    <!-- Answer review -->
+    <h5 class="fw-bold mb-3">Answer Review</h5>
+    {% for ans in answers %}
+    <div class="card p-3 mb-3 {% if ans.is_correct %}border-success{% else %}border-danger{% endif %}" style="border-left-width:4px">
+      <div class="d-flex align-items-start gap-2 mb-2">
+        <i class="bi bi-{% if ans.is_correct %}check-circle-fill text-success{% else %}x-circle-fill text-danger{% endif %} mt-1"></i>
+        <p class="fw-semibold mb-0" style="font-size:13px">{{ ans.question.text }}</p>
+      </div>
+      <div class="ms-4" style="font-size:13px">
+        <span class="text-muted">Your answer: </span>
+        <strong {% if not ans.is_correct %}style="color:#dc2626"{% endif %}>{{ ans.choice.text|default:"Not answered" }}</strong>
+      </div>
+      {% if not ans.is_correct %}
+      {% for c in ans.question.choices.all %}{% if c.is_correct %}
+      <div class="ms-4 mt-1" style="font-size:13px;color:#059669"><i class="bi bi-check2 me-1"></i>Correct: <strong>{{ c.text }}</strong></div>
+      {% endif %}{% endfor %}
+      {% endif %}
+      {% if ans.question.explanation %}
+      <div class="ms-4 mt-2 p-2 rounded" style="background:#f8fafc;font-size:12px;color:#64748b"><i class="bi bi-lightbulb me-1 text-warning"></i>{{ ans.question.explanation }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <a href="{% url 'quiz:list' %}" class="btn btn-primary w-100 mt-2">Back to Quizzes</a>
+  </div>
+</div>
+{% endblock %}

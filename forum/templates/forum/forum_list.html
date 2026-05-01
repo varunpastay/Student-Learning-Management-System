@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Forum — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><h4 class="page-title mb-0"><i class="bi bi-chat-square-text me-2 text-primary"></i>Discussion Forum</h4>
+  <p class="text-muted mb-0" style="font-size:13px">{{ course.title }}</p></div>
+  {% if is_enrolled or user.is_teacher %}
+  <a href="{% url 'forum:create' course.slug %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>New Post</a>
+  {% endif %}
+</div>
+{% if posts %}
+<div class="card">
+{% for post in posts %}
+<a href="{% url 'forum:post' post.id %}" class="text-decoration-none">
+  <div class="d-flex align-items-start gap-3 px-4 py-3 border-bottom" style="transition:.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+    <div class="avatar-sm flex-shrink-0 mt-1" style="background:{% if post.author.is_teacher %}#dcfce7{% else %}#ede9fe{% endif %};color:{% if post.author.is_teacher %}#166534{% else %}#7c3aed{% endif %};font-size:11px">{{ post.author.first_name|first }}{{ post.author.last_name|first }}</div>
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center gap-2">
+        {% if post.is_pinned %}<i class="bi bi-pin-fill text-warning" style="font-size:12px"></i>{% endif %}
+        <span class="fw-semibold text-dark" style="font-size:14px">{{ post.title }}</span>
+        {% if post.author.is_teacher %}<span class="badge" style="background:#dcfce7;color:#166534;font-size:10px">Teacher</span>{% endif %}
+      </div>
+      <div class="text-muted" style="font-size:12px">{{ post.author.get_full_name }} · {{ post.created_at|timesince }} ago</div>
+      <div class="text-muted" style="font-size:12px;margin-top:2px">{{ post.body|truncatechars:100 }}</div>
+    </div>
+    <div class="text-end flex-shrink-0">
+      <div class="badge bg-light text-muted border"><i class="bi bi-chat me-1"></i>{{ post.reply_count }}</div>
+    </div>
+  </div>
+</a>
+{% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-chat-square-text" style="font-size:3rem;display:block;margin-bottom:12px"></i>
+  <h5>No discussions yet</h5><p style="font-size:13px">Be the first to start a conversation!</p>
+  {% if is_enrolled %}<a href="{% url 'forum:create' course.slug %}" class="btn btn-primary btn-sm">Start Discussion</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

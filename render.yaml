@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: slms-app
+    runtime: python
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input --clear && python manage.py migrate --no-input && python manage.py seed_demo"
+    startCommand: "gunicorn slms_project.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    healthCheckPath: /accounts/login/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.6"
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: slms-db
+          property: connectionString
+      - key: SECURE_SSL_REDIRECT
+        value: "False"
+
+databases:
+  - name: slms-db
+    databaseName: slms
+    user: slms

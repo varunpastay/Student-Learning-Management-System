@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Chat — {{ other_user.get_full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.chat-container{height:calc(100vh - 220px);min-height:400px;display:flex;flex-direction:column}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#f8fafc;border-radius:12px 12px 0 0;border:1px solid #e2e8f0;border-bottom:none}
+.msg-wrap{display:flex;gap:8px;align-items:flex-end}
+.msg-wrap.me{flex-direction:row-reverse}
+.msg-bubble{max-width:65%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.5;word-wrap:break-word}
+.msg-bubble.them{background:#fff;color:#1e293b;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
+.msg-bubble.me{background:#4f46e5;color:#fff;border-bottom-right-radius:4px}
+.msg-time{font-size:10px;color:#94a3b8;white-space:nowrap}
+.chat-input{display:flex;gap:8px;padding:12px;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 12px 12px}
+.chat-input input{flex:1;border-radius:20px;border:1px solid #e2e8f0;padding:8px 16px;font-size:13px;outline:none}
+.chat-input input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.send-btn{background:#4f46e5;color:#fff;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.send-btn:hover{background:#4338ca}
+</style>
+{% endblock %}
+{% block content %}
+<div class="mb-3 d-flex align-items-center gap-3">
+  <a href="{% url 'chat:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <div class="avatar-sm" style="background:#ede9fe;color:#7c3aed;font-size:11px;flex-shrink:0">{{ other_user.first_name|first }}{{ other_user.last_name|first }}</div>
+  <div>
+    <div class="fw-semibold" style="font-size:14px">{{ other_user.get_full_name }}</div>
+    <div class="text-muted" style="font-size:12px">{{ room.course.title }}</div>
+  </div>
+</div>
+
+<div class="chat-container">
+  <div class="chat-messages" id="chatMessages">
+    {% for msg in chat_messages %}
+    <div class="msg-wrap {% if msg.sender == request.user %}me{% else %}them{% endif %}" data-id="{{ msg.id }}">
+      <div class="msg-bubble {% if msg.sender == request.user %}me{% else %}them{% endif %}">{{ msg.message }}</div>
+      <div class="msg-time">{{ msg.sent_at|date:"H:i" }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <form class="chat-input" id="chatForm" method="post">
+    {% csrf_token %}
+    <input type="text" name="message" id="msgInput" placeholder="Type a message..." autocomplete="off">
+    <button type="submit" class="send-btn"><i class="bi bi-send-fill" style="font-size:13px"></i></button>
+  </form>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const chatForm = document.getElementById('chatForm');
+const msgInput = document.getElementById('msgInput');
+let lastId = {{ chat_messages.last.id|default:0 }};
+
+function scrollBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
+scrollBottom();
+
+function addMessage(msg, isMe) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap ' + (isMe ? 'me' : 'them');
+  wrap.dataset.id = msg.id || '';
+  wrap.innerHTML = `<div class="msg-bubble ${isMe?'me':'them'}">${msg.message}</div><div class="msg-time">${msg.time}</div>`;
+  chatMessages.appendChild(wrap);
+  scrollBottom();
+}
+
+chatForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const text = msgInput.value.trim();
+  if (!text) return;
+  const now = new Date();
+  addMessage({message: text, time: now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')}, true);
+  msgInput.value = '';
+  fetch('', {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':'{{ csrf_token }}','Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(text)})
+  .then(r=>r.json()).then(d=>{ if(d.status==='ok') lastId = Math.max(lastId, 0); });
+});
+
+// Poll for new messages every 3 seconds
+setInterval(() => {
+  fetch(`{% url 'chat:poll' room.id %}?last_id=${lastId}`)
+  .then(r=>r.json()).then(d=>{
+    d.messages.forEach(m => {
+      if (!m.is_me) { addMessage(m, false); }
+      if (m.id > lastId) lastId = m.id;
+    });
+  });
+}, 3000);
+</script>
+{% endblock %}

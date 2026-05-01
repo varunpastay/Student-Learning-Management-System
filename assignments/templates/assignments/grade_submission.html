@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Grade Submission — SLMS{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card p-4">
+      <h5 class="fw-bold mb-1"><i class="bi bi-star me-2 text-warning"></i>Grade Submission</h5>
+      <div class="mb-4 p-3 rounded" style="background:#f8fafc">
+        <div class="row g-2" style="font-size:13px">
+          <div class="col-6"><span class="text-muted">Assignment:</span><br><strong>{{ submission.assignment.title }}</strong></div>
+          <div class="col-6"><span class="text-muted">Student:</span><br><strong>{{ submission.student.get_full_name }}</strong></div>
+          <div class="col-6"><span class="text-muted">Submitted:</span><br><strong>{{ submission.submitted_at|date:"M d, Y H:i" }}</strong></div>
+          <div class="col-6"><span class="text-muted">Status:</span><br><span class="badge badge-{{ submission.status }}">{{ submission.get_status_display }}</span></div>
+        </div>
+        <a href="{{ submission.file.url }}" class="btn btn-sm btn-outline-primary mt-3" download><i class="bi bi-download me-1"></i>Download Submission</a>
+        {% if submission.notes %}<p class="mt-2 mb-0 text-muted" style="font-size:12px">Student notes: {{ submission.notes }}</p>{% endif %}
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:12px">{{ field.label }}{% if field.name == 'marks_obtained' %} <span class="text-muted fw-normal">(max {{ submission.assignment.total_marks }})</span>{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<div class="text-danger mt-1" style="font-size:12px">{{ field.errors.0 }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-2"></i>Save Grade & Notify Student</button>
+          <a href="{% url 'assignments:detail' submission.assignment.pk %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

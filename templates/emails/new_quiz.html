@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% block content %}
+<h2>🎯 New Quiz Available!</h2>
+<p>Hi {{ user.first_name }}, a new quiz has been posted in <strong>{{ quiz.course.title }}</strong>.</p>
+<div class="info-box">
+  <p><strong>Quiz:</strong> {{ quiz.title }}</p>
+  <p><strong>Questions:</strong> {{ quiz.questions.count }}</p>
+  <p><strong>Time Limit:</strong> {% if quiz.time_limit %}{{ quiz.time_limit }} minutes{% else %}No limit{% endif %}</p>
+  <p><strong>Pass Score:</strong> {{ quiz.pass_score }}%</p>
+</div>
+<a href="http://student-learning-management-system.onrender.com/quiz/{{ quiz.id }}/take/" class="btn">Take Quiz Now</a>
+{% endblock %}

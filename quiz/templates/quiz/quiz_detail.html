@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{{ quiz.title }} — SLMS{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="card p-4 mb-4">
+      <h3 class="fw-bold mb-1">{{ quiz.title }}</h3>
+      <p class="text-muted" style="font-size:13px">{{ quiz.course.title }}</p>
+      {% if quiz.description %}<p style="font-size:14px">{{ quiz.description }}</p>{% endif %}
+      <div class="row g-3 mt-1" style="font-size:13px">
+        <div class="col-4 text-center p-2 rounded" style="background:#f0f4ff"><div class="fw-bold text-primary" style="font-size:1.5rem">{{ quiz.questions.count }}</div><div class="text-muted" style="font-size:11px">Questions</div></div>
+        <div class="col-4 text-center p-2 rounded" style="background:#f0fdf4"><div class="fw-bold text-success" style="font-size:1.5rem">{{ quiz.time_limit }}m</div><div class="text-muted" style="font-size:11px">Time Limit</div></div>
+        <div class="col-4 text-center p-2 rounded" style="background:#fef9f0"><div class="fw-bold text-warning" style="font-size:1.5rem">{{ quiz.pass_score }}%</div><div class="text-muted" style="font-size:11px">Pass Score</div></div>
+      </div>
+    </div>
+    {% if user.is_teacher and all_attempts %}
+    <div class="card">
+      <div class="card-header">Student Results ({{ all_attempts.count }})</div>
+      <div class="table-responsive">
+        <table class="table mb-0"><thead><tr><th>Student</th><th>Score</th><th>%</th><th>Grade</th><th>Passed</th></tr></thead><tbody>
+        {% for a in all_attempts %}
+        <tr><td style="font-size:13px">{{ a.student.get_full_name }}</td><td style="font-size:13px">{{ a.score }}/{{ a.total }}</td>
+        <td style="font-size:13px">{{ a.percentage }}%</td><td><span class="badge bg-primary">{{ a.grade_letter }}</span></td>
+        <td>{% if a.passed %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %}</td></tr>
+        {% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="col-md-4">
+    <div class="card p-4">
+      {% if user.is_student %}
+        {% if attempt %}
+        <div class="text-center mb-3"><div style="font-size:2.5rem;font-weight:700;color:{% if attempt.passed %}#059669{% else %}#dc2626{% endif %}">{{ attempt.percentage }}%</div>
+        <p class="text-muted" style="font-size:13px">{{ attempt.score }}/{{ attempt.total }} · {{ attempt.grade_letter }}</p></div>
+        <a href="{% url 'quiz:result' quiz.id %}" class="btn btn-outline-primary w-100 mb-2">View Results</a>
+        {% else %}
+        <a href="{% url 'quiz:take' quiz.id %}" class="btn btn-primary w-100 btn-lg mb-2"><i class="bi bi-play-fill me-2"></i>Start Quiz</a>
+        {% endif %}
+      {% else %}
+      <a href="{% url 'quiz:add_question' quiz.id %}" class="btn btn-outline-success w-100 mb-2"><i class="bi bi-plus me-1"></i>Add Question</a>
+      {% endif %}
+      <a href="{% url 'quiz:list' %}" class="btn btn-outline-secondary w-100">Back to Quizzes</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

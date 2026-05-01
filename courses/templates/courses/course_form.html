@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Course — SLMS{% endblock %}
+{% block nav_tcourses %}active{% endblock %}
+{% block nav_ccreate %}active{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-9">
+    <div class="card p-4">
+      <h5 class="fw-bold mb-4"><i class="bi bi-book me-2 text-primary"></i>{{ action }} Course</h5>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+          {% for field in form %}
+          <div class="{% if field.name in 'title,description' %}col-12{% elif field.name in 'start_date,end_date,max_students,level,status,credits' %}col-md-4{% else %}col-md-6{% endif %}">
+            <label class="form-label fw-semibold" style="font-size:12px">{{ field.label }}{% if field.field.required %}<span class="text-danger"> *</span>{% endif %}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="form-text" style="font-size:11px">{{ field.help_text }}</div>{% endif %}
+            {% if field.errors %}<div class="text-danger mt-1" style="font-size:12px">{{ field.errors.0 }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>{{ action }} Course</button>
+          <a href="{% url 'courses:list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

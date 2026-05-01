@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}AI Assistant — SLMS{% endblock %}
+{% block extra_css %}
+<style>
+.bot-container{height:calc(100vh - 200px);min-height:500px;display:flex;flex-direction:column;max-width:800px;margin:0 auto}
+.bot-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:#f8fafc;border-radius:16px 16px 0 0;border:1px solid #e2e8f0;border-bottom:none}
+.bot-wrap{display:flex;gap:10px;align-items:flex-start}
+.bot-wrap.user{flex-direction:row-reverse}
+.bot-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:#ede9fe}
+.user-avatar{background:#4f46e5;color:#fff;font-size:12px;font-weight:700}
+.bot-bubble{max-width:70%;padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word}
+.bot-bubble.bot{background:#fff;border:1px solid #e2e8f0;border-top-left-radius:4px;color:#1e293b}
+.bot-bubble.user{background:#4f46e5;color:#fff;border-top-right-radius:4px}
+.bot-input{display:flex;gap:8px;padding:12px 16px;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 16px 16px}
+.bot-input input{flex:1;border-radius:20px;border:1px solid #e2e8f0;padding:9px 18px;font-size:13px;outline:none}
+.bot-input input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.send-btn{background:#4f46e5;color:#fff;border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.send-btn:hover{background:#4338ca}
+.typing{display:flex;gap:4px;padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;width:fit-content}
+.dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;animation:bounce 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.quick-btns{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;background:#f8fafc;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0}
+.quick-btn{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;color:#475569;transition:.15s}
+.quick-btn:hover{background:var(--primary-light);color:#4f46e5;border-color:#4f46e5}
+</style>
+{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <h4 class="page-title mb-0"><i class="bi bi-robot me-2 text-primary"></i>AI Study Assistant</h4>
+  <p class="text-muted" style="font-size:13px">Ask me anything about your courses, assignments, or grades!</p>
+</div>
+
+<div class="bot-container">
+  <div class="bot-messages" id="botMessages">
+    <!-- Welcome message -->
+    <div class="bot-wrap">
+      <div class="bot-avatar">🤖</div>
+      <div class="bot-bubble bot">👋 Hi {{ user.first_name }}! I'm your SLMS AI Assistant.
+
+I can help you with:
+• 📚 Your enrolled courses
+• 📝 Pending assignments & deadlines
+• ⭐ Your grades & scores
+• 📊 Course progress
+• 💡 Study tips & motivation
+
+What would you like to know?</div>
+    </div>
+  </div>
+
+  <!-- Quick reply buttons -->
+  <div class="quick-btns" id="quickBtns">
+    <button class="quick-btn" onclick="sendQuick('My courses')">📚 My Courses</button>
+    <button class="quick-btn" onclick="sendQuick('My assignments')">📝 Assignments</button>
+    <button class="quick-btn" onclick="sendQuick('My grades')">⭐ My Grades</button>
+    <button class="quick-btn" onclick="sendQuick('My progress')">📊 Progress</button>
+    <button class="quick-btn" onclick="sendQuick('Study tips')">💡 Study Tips</button>
+    <button class="quick-btn" onclick="sendQuick('Help')">❓ Help</button>
+  </div>
+
+  <div class="bot-input">
+    <input type="text" id="botInput" placeholder="Ask me anything..." autocomplete="off">
+    <button class="send-btn" onclick="sendMessage()"><i class="bi bi-send-fill" style="font-size:13px"></i></button>
+  </div>
+</div>
+
+<script>
+const botMessages = document.getElementById('botMessages');
+const botInput = document.getElementById('botInput');
+
+function scrollBottom() { botMessages.scrollTop = botMessages.scrollHeight; }
+
+function addMessage(text, isUser) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bot-wrap ' + (isUser ? 'user' : '');
+  const avatar = document.createElement('div');
+  avatar.className = 'bot-avatar ' + (isUser ? 'user-avatar' : '');
+  avatar.textContent = isUser ? '{{ user.first_name|first }}{{ user.last_name|first }}' : '🤖';
+  const bubble = document.createElement('div');
+  bubble.className = 'bot-bubble ' + (isUser ? 'user' : 'bot');
+  // Convert **bold** to <strong>
+  bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  if (isUser) { wrap.appendChild(bubble); wrap.appendChild(avatar); }
+  else { wrap.appendChild(avatar); wrap.appendChild(bubble); }
+  botMessages.appendChild(wrap);
+  scrollBottom();
+}
+
+function showTyping() {
+  const wrap = document.createElement('div');
+  wrap.className = 'bot-wrap'; wrap.id = 'typingIndicator';
+  wrap.innerHTML = '<div class="bot-avatar">🤖</div><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  botMessages.appendChild(wrap);
+  scrollBottom();
+}
+
+function hideTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function sendMessage() {
+  const text = botInput.value.trim();
+  if (!text) return;
+  addMessage(text, true);
+  botInput.value = '';
+  showTyping();
+
+  fetch('{% url "chatbot:api" %}', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body: JSON.stringify({message: text})
+  })
+  .then(r => r.json())
+  .then(data => {
+    hideTyping();
+    addMessage(data.reply || 'Sorry, I could not understand that.', false);
+  })
+  .catch(() => { hideTyping(); addMessage('Sorry, something went wrong. Please try again.', false); });
+}
+
+function sendQuick(text) {
+  botInput.value = text;
+  sendMessage();
+}
+
+botInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+</script>
+{% endblock %}

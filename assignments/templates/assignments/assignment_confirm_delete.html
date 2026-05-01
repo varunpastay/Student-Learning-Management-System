@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Delete Assignment — SLMS{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm p-4 text-center">
+        <i class="bi bi-exclamation-triangle-fill text-danger mb-3" style="font-size:3rem;"></i>
+        <h4 class="fw-bold">Delete Assignment?</h4>
+        <p class="text-muted">Are you sure you want to delete <strong>{{ assignment.title }}</strong>? All student submissions will also be deleted.</p>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger me-2">Yes, Delete</button>
+          <a href="{% url 'assignments:detail' assignment.pk %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

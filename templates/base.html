@@ -1,0 +1,225 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SLMS{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--primary:#4f46e5;--primary-light:#ede9fe;--sidebar-w:240px;}
+    *{box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:#f1f5f9;font-size:14px}
+    .topbar{background:linear-gradient(135deg,#4f46e5,#7c3aed);height:56px;position:fixed;top:0;left:0;right:0;z-index:1040;display:flex;align-items:center;padding:0 20px;box-shadow:0 2px 8px rgba(79,70,229,.35)}
+    .topbar-brand{color:#fff;font-weight:700;font-size:1.1rem;text-decoration:none;display:flex;align-items:center;gap:8px}
+    .topbar-brand:hover{color:#fff}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .notif-btn{position:relative;background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+    .notif-btn:hover{background:rgba(255,255,255,.25)}
+    .notif-count{position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+    .user-menu-btn{background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;padding:6px 12px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer}
+    .user-menu-btn:hover{background:rgba(255,255,255,.25)}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0}
+    .user-avatar img{width:100%;height:100%;object-fit:cover}
+    .sidebar{position:fixed;top:56px;left:0;width:var(--sidebar-w);height:calc(100vh - 56px);background:#fff;overflow-y:auto;border-right:1px solid #e2e8f0;z-index:1030;padding:12px 10px;transition:transform .25s}
+    .sidebar-section{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;padding:10px 10px 4px}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;color:#475569;text-decoration:none;font-size:13px;font-weight:500;margin-bottom:2px;transition:all .15s}
+    .sidebar-link i{font-size:15px;width:18px;text-align:center}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--primary-light);color:var(--primary)}
+    .sidebar-link.active{font-weight:600}
+    .sidebar-badge{margin-left:auto;background:var(--primary);color:#fff;font-size:10px;font-weight:700;border-radius:10px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+    .main-content{margin-left:var(--sidebar-w);margin-top:56px;padding:24px;min-height:calc(100vh - 56px)}
+    .card{border:none;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+    .card-header{background:transparent;border-bottom:1px solid #f1f5f9;padding:14px 20px;font-weight:600;font-size:14px}
+    .stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+    .stat-card .stat-val{font-size:2rem;font-weight:700;line-height:1}
+    .stat-card .stat-lbl{font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+    .table thead th{background:#f8fafc;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:1px solid #e2e8f0}
+    .badge-published{background:#dcfce7;color:#166534}
+    .badge-draft{background:#fef3c7;color:#92400e}
+    .badge-archived{background:#f1f5f9;color:#475569}
+    .badge-submitted{background:#dbeafe;color:#1e40af}
+    .badge-late{background:#fee2e2;color:#991b1b}
+    .badge-graded{background:#dcfce7;color:#166534}
+    .badge-pending{background:#fef3c7;color:#92400e}
+    .badge-beginner{background:#dcfce7;color:#166534}
+    .badge-intermediate{background:#dbeafe;color:#1e40af}
+    .badge-advanced{background:#fee2e2;color:#991b1b}
+    .progress{height:6px;border-radius:3px}
+    .django-messages{position:fixed;top:64px;right:16px;z-index:2000;min-width:300px;max-width:400px}
+    .notif-dropdown{min-width:360px;max-height:420px;overflow-y:auto;padding:0;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.15);border:1px solid #e2e8f0}
+    .form-control,.form-select{border-radius:8px;border-color:#e2e8f0;font-size:13px}
+    .form-control:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+    .btn{border-radius:8px;font-size:13px;font-weight:500}
+    .btn-primary{background:var(--primary);border-color:var(--primary)}
+    .btn-primary:hover{background:#4338ca;border-color:#4338ca}
+    .page-title{font-size:1.3rem;font-weight:700;color:#1e293b}
+    .text-muted{color:#64748b!important}
+    .avatar-sm{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+  
+  /* ── Dark Mode ── */
+  body.dark-mode { background:#0f172a!important; color:#e2e8f0!important; }
+  body.dark-mode .card { background:#1e293b!important; color:#e2e8f0!important; }
+  body.dark-mode .sidebar { background:#1e293b!important; border-color:#334155!important; }
+  body.dark-mode .sidebar-link { color:#94a3b8!important; }
+  body.dark-mode .sidebar-link:hover,body.dark-mode .sidebar-link.active { background:#2d3f55!important; color:#818cf8!important; }
+  body.dark-mode .form-control,body.dark-mode .form-select { background:#1e293b!important; border-color:#334155!important; color:#e2e8f0!important; }
+  body.dark-mode table { color:#e2e8f0!important; }
+  body.dark-mode .table thead th { background:#0f172a!important; color:#94a3b8!important; }
+  body.dark-mode .border-bottom { border-color:#334155!important; }
+  body.dark-mode .text-muted { color:#94a3b8!important; }
+  body.dark-mode .bg-light { background:#1e293b!important; }
+  body.dark-mode .dropdown-menu { background:#1e293b!important; border-color:#334155!important; }
+  body.dark-mode .dropdown-item { color:#e2e8f0!important; }
+  body.dark-mode .dropdown-item:hover { background:#2d3f55!important; }
+  body.dark-mode .card-header { border-color:#334155!important; }
+  body.dark-mode .stat-card { background:#1e293b!important; }
+  body.dark-mode .input-group-text { background:#1e293b!important; border-color:#334155!important; color:#e2e8f0!important; }
+  body.dark-mode .modal-content { background:#1e293b!important; color:#e2e8f0!important; }
+  body.dark-mode .page-link { background:#1e293b!important; border-color:#334155!important; color:#818cf8!important; }
+  body.dark-mode .alert { border:none!important; }
+  body.dark-mode pre,body.dark-mode code { background:#0f172a!important; color:#a5f3fc!important; }
+
+  @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.show{transform:translateX(0)}.main-content{margin-left:0}}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1025}
+    .sidebar-overlay.show{display:block}
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav class="topbar">
+  <button class="btn d-md-none me-2 p-1 text-white" onclick="toggleSidebar()" style="background:rgba(255,255,255,.15);border:none;border-radius:6px;"><i class="bi bi-list fs-5"></i></button>
+  <a href="{% url 'dashboard:home' %}" class="topbar-brand"><i class="bi bi-mortarboard-fill"></i> SLMS</a>
+  <div class="topbar-right">
+    {% if user.is_authenticated %}
+    <!-- Dark mode toggle -->
+    <button id="darkToggle" onclick="toggleDark()" class="notif-btn" title="Toggle Dark Mode">
+      <i class="bi bi-moon-fill" id="darkIcon"></i>
+    </button>
+    <div class="dropdown">
+      <button class="notif-btn" data-bs-toggle="dropdown" id="notifBell">
+        <i class="bi bi-bell-fill"></i>
+        {% with cnt=user.notifications.all|length %}{% if cnt > 0 %}<span class="notif-count" id="notifCount">{{ cnt }}</span>{% endif %}{% endwith %}
+      </button>
+      <div class="dropdown-menu notif-dropdown" style="right:0;left:auto;margin-top:6px">
+        <div style="padding:12px 16px;font-weight:600;font-size:13px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
+          <span>Notifications</span>
+          <a href="{% url 'notifications:mark_all_read' %}" class="text-primary text-decoration-none" style="font-size:12px">Mark all read</a>
+        </div>
+        {% for notif in user.notifications.all|slice:":6" %}
+        <div style="padding:10px 16px;border-bottom:1px solid #f8fafc;{% if not notif.is_read %}background:#f5f3ff;{% endif %}">
+          <div class="d-flex gap-2">
+            <span>{% if notif.notification_type == 'assignment' %}📝{% elif notif.notification_type == 'course' %}📖{% elif notif.notification_type == 'grade' %}⭐{% else %}🔔{% endif %}</span>
+            <div><div style="font-size:13px;font-weight:500;color:#1e293b">{{ notif.title|truncatechars:42 }}</div><div style="font-size:12px;color:#64748b">{{ notif.message|truncatechars:55 }}</div></div>
+          </div>
+        </div>
+        {% empty %}<div style="padding:20px 16px;text-align:center;color:#64748b;font-size:13px">No notifications</div>{% endfor %}
+        <div style="padding:10px 16px;text-align:center"><a href="{% url 'notifications:list' %}" class="text-decoration-none" style="font-size:13px;color:var(--primary);font-weight:500">View all →</a></div>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="user-menu-btn" data-bs-toggle="dropdown">
+        <div class="user-avatar">{% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% endif %}</div>
+        <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username|truncatechars:16 }}</span>
+        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow" style="border-radius:10px;border-color:#e2e8f0;min-width:200px;padding:6px">
+        <li><div style="padding:8px 12px"><div style="font-weight:600;font-size:13px">{{ user.get_full_name }}</div><div style="font-size:11px;color:#64748b">{{ user.email }}</div></div></li>
+        <li><hr class="dropdown-divider my-1"></li>
+        <li><a class="dropdown-item" style="border-radius:6px;font-size:13px;padding:8px 12px" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard</a></li>
+        <li><a class="dropdown-item" style="border-radius:6px;font-size:13px;padding:8px 12px" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2 text-primary"></i>My Profile</a></li>
+        <li><a class="dropdown-item" style="border-radius:6px;font-size:13px;padding:8px 12px" href="{% url 'accounts:change_password' %}"><i class="bi bi-key me-2 text-warning"></i>Change Password</a></li>
+        <li><hr class="dropdown-divider my-1"></li>
+        <li><a class="dropdown-item text-danger" style="border-radius:6px;font-size:13px;padding:8px 12px" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
+      </ul>
+    </div>
+    {% else %}
+    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-light me-2">Login</a>
+    <a href="{% url 'accounts:register_student' %}" class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3)">Register</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% if user.is_authenticated %}
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  {% if user.is_student %}
+  <div class="sidebar-section">Menu</div>
+  <a href="{% url 'dashboard:student_dashboard' %}" class="sidebar-link {% block nav_sdash %}{% endblock %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+  <a href="{% url 'courses:list' %}" class="sidebar-link {% block nav_courses %}{% endblock %}"><i class="bi bi-book"></i> Browse Courses</a>
+  <a href="{% url 'assignments:list' %}" class="sidebar-link {% block nav_asgn %}{% endblock %}"><i class="bi bi-file-earmark-text"></i> My Assignments</a>
+  <div class="sidebar-section">Account</div>
+  <a href="{% url 'notifications:list' %}" class="sidebar-link {% block nav_notif %}{% endblock %}"><i class="bi bi-bell"></i> Notifications</a>
+  <a href="{% url 'accounts:profile' %}" class="sidebar-link {% block nav_profile %}{% endblock %}"><i class="bi bi-person-circle"></i> Profile</a>
+  <a href="{% url 'quiz:list' %}" class="sidebar-link"><i class="bi bi-patch-question"></i> Quizzes</a>
+  <a href="{% url 'certificates:list' %}" class="sidebar-link"><i class="bi bi-award"></i> Certificates</a>
+  <a href="{% url 'dashboard:leaderboard' %}" class="sidebar-link"><i class="bi bi-trophy"></i> Leaderboard</a>
+  <a href="{% url 'chat:list' %}" class="sidebar-link"><i class="bi bi-chat-dots"></i> Messages</a>
+  <a href="{% url 'chatbot:chat' %}" class="sidebar-link"><i class="bi bi-robot"></i> AI Assistant</a>
+  <a href="{% url 'accounts:change_password' %}" class="sidebar-link"><i class="bi bi-key"></i> Change Password</a>
+  {% elif user.is_teacher %}
+  <div class="sidebar-section">Teaching</div>
+  <a href="{% url 'dashboard:teacher_dashboard' %}" class="sidebar-link {% block nav_tdash %}{% endblock %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+  <a href="{% url 'courses:list' %}" class="sidebar-link {% block nav_tcourses %}{% endblock %}"><i class="bi bi-collection"></i> Courses</a>
+  <a href="{% url 'courses:create' %}" class="sidebar-link {% block nav_ccreate %}{% endblock %}"><i class="bi bi-plus-circle"></i> New Course</a>
+  <a href="{% url 'assignments:list' %}" class="sidebar-link {% block nav_tasgn %}{% endblock %}"><i class="bi bi-file-earmark-text"></i> Assignments</a>
+  <a href="{% url 'assignments:create' %}" class="sidebar-link {% block nav_acreate %}{% endblock %}"><i class="bi bi-file-plus"></i> New Assignment</a>
+  <div class="sidebar-section">Account</div>
+  <a href="{% url 'notifications:list' %}" class="sidebar-link {% block nav_tnotif %}{% endblock %}"><i class="bi bi-bell"></i> Notifications</a>
+  <a href="{% url 'accounts:profile' %}" class="sidebar-link {% block nav_tprofile %}{% endblock %}"><i class="bi bi-person-circle"></i> Profile</a>
+  <a href="{% url 'quiz:list' %}" class="sidebar-link"><i class="bi bi-patch-question"></i> Quizzes</a>
+  <a href="{% url 'quiz:create' %}" class="sidebar-link"><i class="bi bi-plus-circle"></i> New Quiz</a>
+  <a href="{% url 'dashboard:leaderboard' %}" class="sidebar-link"><i class="bi bi-trophy"></i> Leaderboard</a>
+  <a href="{% url 'chat:list' %}" class="sidebar-link"><i class="bi bi-chat-dots"></i> Messages</a>
+  <a href="{% url 'feedback:teacher_view' %}" class="sidebar-link"><i class="bi bi-star"></i> My Feedback</a>
+  <a href="{% url 'accounts:change_password' %}" class="sidebar-link"><i class="bi bi-key"></i> Change Password</a>
+  {% else %}
+  <div class="sidebar-section">Admin</div>
+  <a href="{% url 'dashboard:admin_dashboard' %}" class="sidebar-link {% block nav_adash %}{% endblock %}"><i class="bi bi-speedometer2"></i> Overview</a>
+  <a href="{% url 'courses:list' %}" class="sidebar-link"><i class="bi bi-book"></i> All Courses</a>
+  <a href="{% url 'assignments:list' %}" class="sidebar-link"><i class="bi bi-file-earmark-text"></i> Assignments</a>
+  <a href="/admin/" class="sidebar-link" target="_blank"><i class="bi bi-gear"></i> Django Admin</a>
+  <a href="/api/docs/" class="sidebar-link" target="_blank"><i class="bi bi-code-slash"></i> API Docs</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if messages %}
+<div class="django-messages" id="flashMessages">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm mb-2" style="border-radius:10px;border:none;font-size:13px">
+    {{ message }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="{% if user.is_authenticated %}main-content{% endif %}">
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('show');document.getElementById('sidebarOverlay').classList.toggle('show');}
+setTimeout(()=>{document.querySelectorAll('#flashMessages .alert').forEach(a=>{try{new bootstrap.Alert(a).close();}catch(e){}});},4500);
+</script>
+{% block extra_js %}{% endblock %}
+<script>
+function toggleDark(){
+  document.body.classList.toggle('dark-mode');
+  const on = document.body.classList.contains('dark-mode');
+  localStorage.setItem('darkMode', on);
+  document.getElementById('darkIcon').className = on ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+}
+// Apply on load
+if(localStorage.getItem('darkMode')==='true'){
+  document.body.classList.add('dark-mode');
+  const icon = document.getElementById('darkIcon');
+  if(icon) icon.className='bi bi-sun-fill';
+}
+</script>
+</body>
+</html>

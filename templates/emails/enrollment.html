@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% block content %}
+<h2>🎓 Welcome to {{ enrollment.course.title }}!</h2>
+<p>Hi {{ user.first_name }}, you have successfully enrolled in a new course.</p>
+<div class="info-box">
+  <p><strong>Course:</strong> {{ enrollment.course.title }}</p>
+  <p><strong>Instructor:</strong> {{ enrollment.course.teacher.get_full_name }}</p>
+  <p><strong>Level:</strong> {{ enrollment.course.get_level_display }}</p>
+</div>
+<p>Start learning today and track your progress on your dashboard!</p>
+<a href="http://student-learning-management-system.onrender.com/courses/{{ enrollment.course.slug }}/" class="btn">Go to Course</a>
+{% endblock %}

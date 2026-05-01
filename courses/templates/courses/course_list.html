@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Courses — SLMS{% endblock %}
+{% block nav_courses %}active{% endblock %}
+{% block nav_tcourses %}active{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><h4 class="page-title mb-0">Browse Courses</h4><p class="text-muted mb-0" style="font-size:13px">Discover and enroll in available courses</p></div>
+  {% if user.is_authenticated and user.is_teacher %}<a href="{% url 'courses:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Create Course</a>{% endif %}
+</div>
+
+<!-- Search & Filters -->
+<div class="card mb-4 p-3">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-5"><label class="form-label fw-semibold" style="font-size:12px">Search</label>
+      <input type="text" name="q" class="form-control" placeholder="Search courses, instructors..." value="{{ query }}"></div>
+    <div class="col-md-2"><label class="form-label fw-semibold" style="font-size:12px">Category</label>
+      <select name="category" class="form-select">
+        <option value="">All Categories</option>
+        {% for cat in categories %}<option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-2"><label class="form-label fw-semibold" style="font-size:12px">Level</label>
+      <select name="level" class="form-select">
+        <option value="">All Levels</option>
+        {% for val,label in level_choices %}<option value="{{ val }}" {% if selected_level == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Search</button></div>
+    {% if query or selected_category or selected_level %}<div class="col-md-1"><a href="{% url 'courses:list' %}" class="btn btn-outline-secondary w-100" title="Clear">✕</a></div>{% endif %}
+  </form>
+</div>
+
+{% if courses %}
+<div class="row g-4">
+  {% for course in courses %}
+  <div class="col-md-4">
+    <div class="card h-100" style="transition:transform .2s;cursor:pointer" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+      {% if course.thumbnail %}
+      <img src="{{ course.thumbnail.url }}" class="card-img-top" style="height:160px;object-fit:cover;border-radius:12px 12px 0 0">
+      {% else %}
+      <div style="height:160px;border-radius:12px 12px 0 0;background:{% cycle '#ede9fe' '#e0f2fe' '#dcfce7' '#fef3c7' '#fce7f3' '#f0fdf4' %};display:flex;align-items:center;justify-content:center;font-size:3.5rem">
+        {% cycle '🐍' '🌳' '🌐' '🗄️' '🤖' '📊' %}
+      </div>
+      {% endif %}
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          {% if course.category %}<span class="badge" style="background:#ede9fe;color:#7c3aed;font-size:10px">{{ course.category.name }}</span>{% endif %}
+          <span class="badge badge-{{ course.level }}" style="font-size:10px">{{ course.get_level_display }}</span>
+        </div>
+        <h6 class="fw-semibold mb-1" style="font-size:14px">
+          <a href="{% url 'courses:detail' course.slug %}" class="text-decoration-none text-dark">{{ course.title }}</a>
+        </h6>
+        <p class="text-muted mb-2" style="font-size:12px;line-height:1.5">{{ course.description|truncatechars:80 }}</p>
+        <div class="d-flex align-items-center text-muted" style="font-size:12px">
+          <i class="bi bi-person-circle me-1"></i>{{ course.teacher.get_full_name }}
+          <span class="ms-auto"><i class="bi bi-people me-1"></i>{{ course.enrolled_count }}/{{ course.max_students }}</span>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
+        <a href="{% url 'courses:detail' course.slug %}" class="btn btn-outline-primary btn-sm w-100">
+          {% if user.is_authenticated and user.is_student %}
+            {% if course in user_enrolled_courses %}Continue Learning{% else %}View & Enroll{% endif %}
+          {% else %}View Course{% endif %}
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if courses.has_other_pages %}
+<nav class="mt-4 d-flex justify-content-center">
+  <ul class="pagination">
+    {% if courses.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ courses.previous_page_number }}&q={{ query }}&category={{ selected_category }}&level={{ selected_level }}">‹</a></li>{% endif %}
+    {% for num in courses.paginator.page_range %}
+    <li class="page-item {% if courses.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&q={{ query }}&category={{ selected_category }}&level={{ selected_level }}">{{ num }}</a></li>
+    {% endfor %}
+    {% if courses.has_next %}<li class="page-item"><a class="page-link" href="?page={{ courses.next_page_number }}&q={{ query }}&category={{ selected_category }}&level={{ selected_level }}">›</a></li>{% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-search text-muted" style="font-size:3.5rem;display:block;margin-bottom:12px"></i>
+  <h5 class="text-muted">No courses found</h5>
+  <p class="text-muted" style="font-size:13px">Try adjusting your search or filters.</p>
+  <a href="{% url 'courses:list' %}" class="btn btn-outline-primary btn-sm">Clear Filters</a>
+</div>
+{% endif %}
+{% endblock %}
