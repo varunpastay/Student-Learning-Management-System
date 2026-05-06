@@ -12,7 +12,7 @@ class Category(models.Model):
     name        = models.CharField(max_length=100, unique=True)
     slug        = models.SlugField(unique=True, blank=True)
     description = models.TextField(blank=True)
-    icon        = models.CharField(max_length=50, default='book', help_text='Bootstrap icon name')
+    icon        = models.CharField(max_length=50, default='book')
     created_at  = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -55,11 +55,17 @@ class Course(models.Model):
     end_date    = models.DateField(null=True, blank=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
-    youtube_url = models.URLField(blank=True, help_text='YouTube video URL for this course (e.g. https://youtube.com/watch?v=...)')
+    youtube_url = models.URLField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            base_slug = slugify(self.title)
+            slug = base_slug
+            counter = 1
+            while Course.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     @property
@@ -105,21 +111,20 @@ class Enrollment(models.Model):
 
 
 class CourseMaterial(models.Model):
-    """Lecture notes, slides, links attached to a course."""
     class MaterialType(models.TextChoices):
         PDF   = 'pdf',   'PDF'
         VIDEO = 'video', 'Video Link'
         LINK  = 'link',  'External Link'
         OTHER = 'other', 'Other'
 
-    course      = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='materials')
-    title       = models.CharField(max_length=200)
+    course        = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='materials')
+    title         = models.CharField(max_length=200)
     material_type = models.CharField(max_length=10, choices=MaterialType.choices, default=MaterialType.PDF)
-    file        = models.FileField(upload_to='course_materials/', blank=True, null=True)
-    url         = models.URLField(blank=True)
-    description = models.TextField(blank=True)
-    order       = models.PositiveIntegerField(default=0)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    file          = models.FileField(upload_to='course_materials/', blank=True, null=True)
+    url           = models.URLField(blank=True)
+    description   = models.TextField(blank=True)
+    order         = models.PositiveIntegerField(default=0)
+    uploaded_at   = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.course.title} | {self.title}"
